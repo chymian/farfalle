@@ -52,8 +52,15 @@ services:
           target: /workspace/src/backend
     networks:
       - farfalle-network
+      - dokploy-network
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    labels:  
+      - "traefik.enable=false"
+      - "traefik.http.routers.farfalle-be.rule=Host(`${FARFALLE_BACKEND_HOST}`)"
+      - "traefik.http.services.farfalle-be.loadbalancer.server.port=${FARFALLE_BACKEND_PORT}"
+      - "traefik.http.routers.farfalle-be.entrypoints=web"
+      - "traefik.http.routers.farfalle-be.tls.certResolver=letsencrypt"
 
   frontend:
     depends_on:
@@ -77,6 +84,14 @@ services:
             - node_modules/
     networks:
       - farfalle-network
+      - dokploy-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.farfalle-fe.rule=Host(`${FARFALLE_FRONTEND_HOST}`)"
+      - "traefik.http.services.farfalle-fe.loadbalancer.server.port=${FARFALLE_FRONTEND_PORT}"
+      - "traefik.http.routers.farfalle-fe.entrypoints=websecure"
+      - "traefik.http.routers.farfalle-fe.entrypoints=web"
+      - "traefik.http.routers.farfalle-fe.tls.certResolver=letsencrypt"
 
   searxng:
     image: docker.io/searxng/searxng:latest
@@ -87,7 +102,14 @@ services:
       - ./searxng:/etc/searxng:rw
     networks:
       - farfalle-network
-
+      - dokploy-network
+    labels:
+      - "traefik.enable=false"
+      - "traefik.http.routers.farfalle-searx.rule=Host(`${FARFALLE_FRONTEND_HOST}`)"
+      - "traefik.http.services.farfalle-searx.loadbalancer.server.port=${FARFALLE_FRONTEND_PORT}"
+      - "traefik.http.routers.farfalle-searx.entrypoints=web"
+      
+      
   db:
     image: postgres:15.2-alpine
     restart: always
@@ -101,10 +123,13 @@ services:
       - db_volume:/var/lib/postgresql/data
     networks:
       - farfalle-network
+      - dokploy-network
 
 networks:
   farfalle-network:
     name: farfalle-network
+  dokploy-network:
+    external: true
 
 volumes:
   db_volume:
