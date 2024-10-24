@@ -8,7 +8,7 @@ services:
       dockerfile: ./src/backend/Dockerfile
     restart: always
     ports:
-      - "8000:8000"
+      - "18000:8000"
     environment:
       - SEARCH_PROVIDER=${SEARCH_PROVIDER:-searxng}
       - SEARXNG_BASE_URL=${SEARXNG_BASE_URL:-http://searxng:8080}
